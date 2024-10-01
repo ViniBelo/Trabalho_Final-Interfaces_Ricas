@@ -2,6 +2,9 @@ package br.edu.utfpr.trabalhofinal.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+val PositiveValue = Color(0xFF00984E)
+val NegativeValue = Color(0xFFCF5355)
+
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)

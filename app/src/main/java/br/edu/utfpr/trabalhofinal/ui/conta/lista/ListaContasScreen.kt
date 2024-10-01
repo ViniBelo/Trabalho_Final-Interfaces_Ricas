@@ -15,7 +15,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.HorizontalRule
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ThumbDown
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.outlined.ThumbDown
+import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -38,6 +43,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import br.edu.utfpr.trabalhofinal.R
 import br.edu.utfpr.trabalhofinal.data.Conta
 import br.edu.utfpr.trabalhofinal.data.TipoContaEnum
+import br.edu.utfpr.trabalhofinal.ui.theme.NegativeValue
+import br.edu.utfpr.trabalhofinal.ui.theme.PositiveValue
 import br.edu.utfpr.trabalhofinal.ui.theme.TrabalhoFinalTheme
 import br.edu.utfpr.trabalhofinal.ui.utils.composables.Carregando
 import br.edu.utfpr.trabalhofinal.ui.utils.composables.ErroAoCarregar
@@ -165,9 +172,34 @@ private fun List(
     LazyColumn(modifier = modifier) {
         items(contas) { conta ->
             val descricao = "${conta.data.formatar()} - ${conta.descricao}"
+            val icon = when {
+                conta.tipo == TipoContaEnum.RECEITA && conta.paga -> Icons.Filled.ThumbUp
+                conta.tipo == TipoContaEnum.RECEITA && !conta.paga -> Icons.Outlined.ThumbUp
+                conta.tipo == TipoContaEnum.DESPESA && conta.paga -> Icons.Filled.ThumbDown
+                conta.tipo == TipoContaEnum.DESPESA && !conta.paga -> Icons.Outlined.ThumbDown
+                else -> Icons.Filled.HorizontalRule
+            }
+            val color = if (conta.tipo == TipoContaEnum.RECEITA) PositiveValue else NegativeValue
+            val valor = if (conta.tipo == TipoContaEnum.RECEITA)
+                conta.valor.formatar()
+            else conta.valor.negate().formatar()
             ListItem(
                 modifier = Modifier.clickable { onContaPressed(conta) },
-                headlineContent = { Text(descricao) },
+                headlineContent = { Text(text = conta.descricao) },
+                supportingContent = { Text(text = conta.data.formatar()) },
+                leadingContent = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = stringResource(R.string.tipo_de_fluxo),
+                        tint = color
+                    )
+                },
+                trailingContent = {
+                    Text(
+                        text = valor,
+                        color = color
+                    )
+                }
             )
         }
     }
@@ -221,6 +253,7 @@ fun Totalizador(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.End,
     ) {
+        val valueTextColor = if (valor >= BigDecimal.ZERO) PositiveValue else NegativeValue
         Text(
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.End,
@@ -232,7 +265,7 @@ fun Totalizador(
             modifier = Modifier.width(100.dp),
             textAlign = TextAlign.End,
             text = valor.formatar(),
-            color = textColor
+            color = valueTextColor
         )
         Spacer(Modifier.size(20.dp))
     }
@@ -266,6 +299,13 @@ private fun gerarContas(): List<Conta> = listOf(
     Conta(
         descricao = "Condomínio",
         valor = BigDecimal("200.0"),
+        tipo = TipoContaEnum.DESPESA,
+        data = LocalDate.of(2024, 9, 15),
+        paga = false
+    ),
+    Conta(
+        descricao = "Test",
+        valor = BigDecimal("4000.0"),
         tipo = TipoContaEnum.DESPESA,
         data = LocalDate.of(2024, 9, 15),
         paga = false
