@@ -171,7 +171,6 @@ private fun List(
 ) {
     LazyColumn(modifier = modifier) {
         items(contas) { conta ->
-            val descricao = "${conta.data.formatar()} - ${conta.descricao}"
             val icon = when {
                 conta.tipo == TipoContaEnum.RECEITA && conta.paga -> Icons.Filled.ThumbUp
                 conta.tipo == TipoContaEnum.RECEITA && !conta.paga -> Icons.Outlined.ThumbUp
@@ -197,7 +196,8 @@ private fun List(
                 trailingContent = {
                     Text(
                         text = valor,
-                        color = color
+                        color = color,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             )
