@@ -1,4 +1,5 @@
 package br.edu.utfpr.trabalhofinal.ui.conta.form
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,14 +17,19 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -31,9 +37,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,9 +56,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.edu.utfpr.trabalhofinal.R
+import br.edu.utfpr.trabalhofinal.data.TipoContaEnum
 import br.edu.utfpr.trabalhofinal.ui.theme.TrabalhoFinalTheme
 import br.edu.utfpr.trabalhofinal.ui.utils.composables.Carregando
 import br.edu.utfpr.trabalhofinal.ui.utils.composables.ErroAoCarregar
+import br.edu.utfpr.trabalhofinal.utils.formatar
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
+
 @Composable
 fun FormularioContaScreen(
     modifier: Modifier = Modifier,
@@ -231,16 +247,16 @@ private fun AppBarPreview() {
 private fun FormContent(
     modifier: Modifier = Modifier,
     processando: Boolean,
-    descricao: CampoFormulario,
-    data: CampoFormulario,
-    valor: CampoFormulario,
-    paga: CampoFormulario,
-    tipo: CampoFormulario,
+    descricao: CampoFormulario<String>,
+    data: CampoFormulario<LocalDate>,
+    valor: CampoFormulario<String>,
+    paga: CampoFormulario<Boolean>,
+    tipo: CampoFormulario<TipoContaEnum>,
     onDescricaoAlterada: (String) -> Unit,
-    onDataAlterada: (String) -> Unit,
+    onDataAlterada: (LocalDate) -> Unit,
     onValorAlterado: (String) -> Unit,
-    onStatusPagamentoAlterado: (String) -> Unit,
-    onTipoAlterado: (String) -> Unit
+    onStatusPagamentoAlterado: (Boolean) -> Unit,
+    onTipoAlterado: (TipoContaEnum) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -261,24 +277,8 @@ private fun FormContent(
             FormTextField(
                 modifier = formTextFieldModifier,
                 titulo = stringResource(R.string.descricao),
-                campoFormulario = descricao,
+                valor = descricao.valor,
                 onValorAlterado = onDescricaoAlterada,
-                keyboardCapitalization = KeyboardCapitalization.Words,
-                enabled = !processando
-            )
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Filled.CalendarMonth,
-                contentDescription = stringResource(R.string.data),
-                tint = MaterialTheme.colorScheme.outline
-            )
-            FormTextField(
-                modifier = formTextFieldModifier,
-                titulo = stringResource(R.string.data),
-                campoFormulario = data,
-                onValorAlterado = onDataAlterada,
-                keyboardType = KeyboardType.Number,
                 keyboardCapitalization = KeyboardCapitalization.Words,
                 enabled = !processando
             )
@@ -292,36 +292,69 @@ private fun FormContent(
             FormTextField(
                 modifier = formTextFieldModifier,
                 titulo = stringResource(R.string.valor),
-                campoFormulario = valor,
+                valor = valor.valor,
                 onValorAlterado = onValorAlterado,
                 enabled = !processando
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = stringResource(R.string.paga),
-                tint = MaterialTheme.colorScheme.outline
+                imageVector = Icons.Filled.CalendarMonth,
+                contentDescription = stringResource(R.string.data),
+                tint = MaterialTheme.colorScheme.background
             )
-            FormTextField(
+            FormDatePicker(
                 modifier = formTextFieldModifier,
-                titulo = stringResource(R.string.paga),
-                campoFormulario = paga,
-                onValorAlterado = onStatusPagamentoAlterado,
+                titulo = "Data",
+                valor = data.valor,
+                errorMessageCode = data.codigoMensagemErro,
+                onValueChanged = onDataAlterada,
                 enabled = !processando
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        val checkOptionsModifier = Modifier.padding(vertical = 8.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = stringResource(R.string.paga),
+                tint = MaterialTheme.colorScheme.background
+            )
+            FormCheckBox(
+                modifier = checkOptionsModifier,
+                label = "Paga",
+                checked = paga.valor,
+                onCheckedChange = onStatusPagamentoAlterado,
+                enabled = !processando
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
             Icon(
                 imageVector = Icons.Filled.AccountBalance,
                 contentDescription = stringResource(R.string.tipo),
-                tint = MaterialTheme.colorScheme.outline
+                tint = MaterialTheme.colorScheme.background
             )
-            FormTextField(
-                modifier = formTextFieldModifier,
-                titulo = stringResource(R.string.tipo),
-                campoFormulario = tipo,
-                onValorAlterado = onTipoAlterado,
+            FormRadioButton(
+                modifier = checkOptionsModifier,
+                label = "Despesa",
+                value = TipoContaEnum.DESPESA,
+                groupValue = tipo.valor,
+                onValueChanged = onTipoAlterado,
+                enabled = !processando
+            )
+            FormRadioButton(
+                modifier = checkOptionsModifier,
+                label = "Receita",
+                value = TipoContaEnum.RECEITA,
+                groupValue = tipo.valor,
+                onValueChanged = onTipoAlterado,
                 enabled = !processando
             )
         }
@@ -331,35 +364,41 @@ private fun FormContent(
 fun FormTextField(
     modifier: Modifier = Modifier,
     titulo: String,
-    campoFormulario: CampoFormulario,
+    valor: String,
+    errorMessageCode: Int = 0,
     onValorAlterado: (String) -> Unit,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     keyboardCapitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences,
     keyboardImeAction: ImeAction = ImeAction.Next,
     keyboardType: KeyboardType = KeyboardType.Text,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     Column(
         modifier = modifier,
     ) {
+        val hasError = errorMessageCode > 0
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
-            value = campoFormulario.valor,
+            value = valor,
             onValueChange = onValorAlterado,
             label = { Text(titulo) },
             maxLines = 1,
             enabled = enabled,
-            isError = campoFormulario.contemErro,
+            isError = hasError,
+            readOnly = readOnly,
             keyboardOptions = KeyboardOptions(
                 capitalization = keyboardCapitalization,
                 imeAction = keyboardImeAction,
                 keyboardType = keyboardType
             ),
-            visualTransformation = visualTransformation
+            visualTransformation = visualTransformation,
+            trailingIcon = trailingIcon
         )
-        if (campoFormulario.contemErro) {
+        if (hasError) {
             Text(
-                text = stringResource(campoFormulario.codigoMensagemErro),
+                text = stringResource(errorMessageCode),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.padding(top = 8.dp)
@@ -367,17 +406,187 @@ fun FormTextField(
         }
     }
 }
+
+@Composable
+fun FormCheckBox(
+    modifier: Modifier = Modifier,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+    label: String
+) {
+    Row (
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
+        )
+        Text(label)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun FormCheckBoxCheckedPreview() {
+    TrabalhoFinalTheme {
+        FormCheckBox(
+            modifier = Modifier.padding(10.dp),
+            checked = true,
+            onCheckedChange = {},
+            label = "Paga"
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun FormCheckBoxUncheckedPreview() {
+    TrabalhoFinalTheme {
+        FormCheckBox(
+            modifier = Modifier.padding(10.dp),
+            checked = false,
+            onCheckedChange = {},
+            label = "Paga"
+        )
+    }
+}
+
+@Composable
+fun FormRadioButton(
+    modifier: Modifier = Modifier,
+    value: TipoContaEnum,
+    groupValue: TipoContaEnum,
+    onValueChanged: (TipoContaEnum) -> Unit,
+    enabled: Boolean = true,
+    label: String
+) {
+    Row (
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = value == groupValue,
+            onClick = { onValueChanged(value) },
+            enabled = enabled
+        )
+        Text(label)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun FormRadioButtonCheckedPreview() {
+    TrabalhoFinalTheme {
+        FormRadioButton(
+            modifier = Modifier.padding(10.dp),
+            value = TipoContaEnum.DESPESA,
+            groupValue = TipoContaEnum.DESPESA,
+            onValueChanged = {},
+            label = "Despesa"
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun FormRadioButtonUncheckedPreview() {
+    TrabalhoFinalTheme {
+        FormRadioButton(
+            modifier = Modifier.padding(10.dp),
+            value = TipoContaEnum.DESPESA,
+            groupValue = TipoContaEnum.RECEITA,
+            onValueChanged = {},
+            label = "Despesa"
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FormDatePicker(
+    modifier: Modifier = Modifier,
+    titulo: String,
+    valor: LocalDate,
+    onValueChanged: (LocalDate) -> Unit,
+    errorMessageCode: Int = 0,
+    enabled: Boolean = true
+) {
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = valor
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli()
+    )
+
+    FormTextField(
+        modifier = modifier,
+        valor = valor.formatar(),
+        onValorAlterado = {},
+        titulo = titulo,
+        readOnly = true,
+        enabled = enabled,
+        errorMessageCode = errorMessageCode,
+        trailingIcon = {
+            IconButton(onClick = { showDatePicker = !showDatePicker }) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Selecione a data",
+                )
+            }
+        }
+    )
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = !showDatePicker },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let {
+                        val date = Instant
+                            .ofEpochMilli(it)
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+                        onValueChanged(date)
+                    }
+                    showDatePicker = !showDatePicker
+                }) {
+                    Text(stringResource(R.string.ok))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun FormDatePickerPreview() {
+    TrabalhoFinalTheme {
+        FormDatePicker(
+            modifier = Modifier.padding(10.dp),
+            titulo = "Data",
+            valor = LocalDate.now(),
+            onValueChanged = {}
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun FormContentPreview() {
     TrabalhoFinalTheme {
         FormContent(
             processando = false,
-            descricao = CampoFormulario(),
-            data = CampoFormulario(),
-            valor = CampoFormulario(),
-            paga = CampoFormulario(),
-            tipo = CampoFormulario(),
+            descricao = CampoFormulario(""),
+            data = CampoFormulario(LocalDate.now()),
+            valor = CampoFormulario(""),
+            paga = CampoFormulario(true),
+            tipo = CampoFormulario(TipoContaEnum.DESPESA),
             onDescricaoAlterada = {},
             onDataAlterada = {},
             onValorAlterado = {},
