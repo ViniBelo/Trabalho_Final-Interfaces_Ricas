@@ -280,7 +280,8 @@ private fun FormContent(
                 valor = descricao.valor,
                 onValorAlterado = onDescricaoAlterada,
                 keyboardCapitalization = KeyboardCapitalization.Words,
-                enabled = !processando
+                enabled = !processando,
+                errorMessageCode = descricao.codigoMensagemErro
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -294,7 +295,9 @@ private fun FormContent(
                 titulo = stringResource(R.string.valor),
                 valor = valor.valor,
                 onValorAlterado = onValorAlterado,
-                enabled = !processando
+                enabled = !processando,
+                keyboardType = KeyboardType.Number,
+                errorMessageCode = valor.codigoMensagemErro
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {

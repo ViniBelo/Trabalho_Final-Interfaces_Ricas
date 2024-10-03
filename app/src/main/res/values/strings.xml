@@ -34,4 +34,6 @@
     <string name="mensagem_confirmacao_remover_contato">Esse registro será removido permanentemente</string>
     <string name="valor_invalido">Informe um valor válido</string>
     <string name="tipo_de_fluxo">Tipo de Fluxo</string>
+    <string name="valor_invalido_erro">Valor inválido</string>
+    <string name="valor_obrigatório">O valor é obrigatório</string>
 </resources>

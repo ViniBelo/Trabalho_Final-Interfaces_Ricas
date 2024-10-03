@@ -74,11 +74,24 @@ class FormularioContaViewModel(
         if (state.valor.valor != novoValor) {
             state = state.copy(
                 valor = state.valor.copy(
-                    valor = novoValor
+                    valor = novoValor,
+                    codigoMensagemErro = validaValorAlterado(novoValor)
                 )
             )
         }
     }
+
+    private fun validaValorAlterado(valor: String): Int {
+        if (valor.isBlank()) return R.string.valor_obrigatório
+
+        return try {
+            BigDecimal(valor)
+            0
+        } catch (_: NumberFormatException) {
+            R.string.valor_invalido_erro
+        }
+    }
+
     fun onStatusPagamentoAlterado(novoStatusPagamento: Boolean) {
         if (state.paga.valor != novoStatusPagamento) {
             state = state.copy(
@@ -88,6 +101,7 @@ class FormularioContaViewModel(
             )
         }
     }
+
     fun onTipoAlterado(novoTipo: TipoContaEnum) {
         if (state.tipo.valor != novoTipo) {
             state = state.copy(
@@ -105,7 +119,11 @@ class FormularioContaViewModel(
             val conta = state.conta.copy(
                 descricao = state.descricao.valor,
                 data = state.data.valor,
-                valor = BigDecimal(state.valor.valor),
+                valor = if (state.valor.valor.isEmpty()) {
+                    BigDecimal.ZERO
+                } else {
+                    BigDecimal(state.valor.valor)
+                },
                 paga = state.paga.valor,
                 tipo = state.tipo.valor
             )
@@ -120,6 +138,9 @@ class FormularioContaViewModel(
         state = state.copy(
             descricao = state.descricao.copy(
                 codigoMensagemErro = validarDescricao(state.descricao.valor)
+            ),
+            valor = state.valor.copy(
+                codigoMensagemErro = validaValorAlterado(state.valor.valor)
             )
         )
         return state.formularioValido
