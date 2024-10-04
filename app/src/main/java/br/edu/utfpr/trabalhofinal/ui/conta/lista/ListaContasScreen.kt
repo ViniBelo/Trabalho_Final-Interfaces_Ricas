@@ -43,8 +43,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import br.edu.utfpr.trabalhofinal.R
 import br.edu.utfpr.trabalhofinal.data.Conta
 import br.edu.utfpr.trabalhofinal.data.TipoContaEnum
-import br.edu.utfpr.trabalhofinal.ui.theme.NegativeValue
-import br.edu.utfpr.trabalhofinal.ui.theme.PositiveValue
 import br.edu.utfpr.trabalhofinal.ui.theme.TrabalhoFinalTheme
 import br.edu.utfpr.trabalhofinal.ui.utils.composables.Carregando
 import br.edu.utfpr.trabalhofinal.ui.utils.composables.ErroAoCarregar
@@ -178,7 +176,7 @@ private fun List(
                 conta.tipo == TipoContaEnum.DESPESA && !conta.paga -> Icons.Outlined.ThumbDown
                 else -> Icons.Filled.HorizontalRule
             }
-            val color = if (conta.tipo == TipoContaEnum.RECEITA) PositiveValue else NegativeValue
+            val color = if (conta.tipo == TipoContaEnum.RECEITA) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onTertiary
             val valor = if (conta.tipo == TipoContaEnum.RECEITA)
                 conta.valor.formatar()
             else conta.valor.negate().formatar()
@@ -253,7 +251,7 @@ fun Totalizador(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.End,
     ) {
-        val valueTextColor = if (valor >= BigDecimal.ZERO) PositiveValue else NegativeValue
+        val valueTextColor = if (valor >= BigDecimal.ZERO) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onTertiary
         Text(
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.End,
